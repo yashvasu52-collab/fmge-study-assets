@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>FMGE — Study Dashboard</title>
+<style>
+:root{
+  --surface:#fcfcfb; --plane:#f9f9f7; --ink:#0b0b0b; --ink2:#52514e; --muted:#898781;
+  --grid:#e1e0d9; --baseline:#c3c2b7; --series1:#2a78d6;
+  --good:#0ca30c; --warn:#fab219; --serious:#ec835a; --crit:#d03b3b;
+  --card:#ffffff; --ring:rgba(11,11,11,0.10);
+}
+:root[data-theme="dark"]{
+  --surface:#1a1a19; --plane:#0d0d0d; --ink:#ffffff; --ink2:#c3c2b7; --muted:#898781;
+  --grid:#2c2c2a; --baseline:#383835; --series1:#3987e5;
+  --good:#0ca30c; --warn:#fab219; --serious:#ec835a; --crit:#d03b3b;
+  --card:#232322; --ring:rgba(255,255,255,0.10);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--plane);color:var(--ink);
+  font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:14px;line-height:1.45}
+.wrap{max-width:1080px;margin:0 auto;padding:18px}
+header{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-bottom:6px}
+h1{font-size:20px;margin:0;font-weight:800}
+.sub{color:var(--muted);font-size:12px;margin:2px 0 14px}
+.spacer{flex:1}
+.seg{display:inline-flex;border:1px solid var(--ring);border-radius:9px;overflow:hidden}
+.seg button{background:transparent;color:var(--ink2);border:0;padding:7px 14px;font-size:13px;font-weight:600;cursor:pointer}
+.seg button.on{background:var(--series1);color:#fff}
+.icon-btn{background:var(--card);border:1px solid var(--ring);border-radius:9px;padding:7px 11px;cursor:pointer;color:var(--ink2);font-size:13px}
+.filters{display:flex;flex-wrap:wrap;gap:10px;background:var(--card);border:1px solid var(--ring);
+  border-radius:12px;padding:12px 14px;margin:8px 0 18px}
+.filters label{display:flex;flex-direction:column;font-size:11px;color:var(--muted);font-weight:600;gap:3px}
+.filters select{font:inherit;font-size:13px;color:var(--ink);background:var(--surface);
+  border:1px solid var(--ring);border-radius:8px;padding:6px 8px;min-width:120px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:8px}
+.kpi{background:var(--card);border:1px solid var(--ring);border-radius:14px;padding:14px 16px}
+.kpi .lab{font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+.kpi .val{font-size:30px;font-weight:800;margin-top:4px;line-height:1}
+.kpi .note{font-size:12px;color:var(--ink2);margin-top:4px}
+.band{background:linear-gradient(90deg,rgba(12,163,12,.14),transparent);border:1px solid var(--ring);
+  border-left:4px solid var(--good);border-radius:12px;padding:12px 16px;margin:14px 0;font-weight:700}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:760px){.grid2{grid-template-columns:1fr}}
+.panel{background:var(--card);border:1px solid var(--ring);border-radius:14px;padding:16px;margin-bottom:16px}
+.panel h2{font-size:14px;margin:0 0 12px;font-weight:800}
+.panel .cap{font-size:12px;color:var(--muted);margin:-8px 0 12px}
+.bar-row{display:grid;grid-template-columns:150px 1fr 46px;align-items:center;gap:10px;margin:5px 0;font-size:13px}
+.bar-track{background:var(--grid);border-radius:5px;height:16px;overflow:hidden}
+.bar-fill{height:100%;border-radius:5px}
+.bar-val{text-align:right;font-variant-numeric:tabular-nums;font-weight:700}
+.hm{display:grid;gap:4px}
+.hm .hcell{border-radius:6px;padding:7px 4px;text-align:center;font-weight:700;font-variant-numeric:tabular-nums;font-size:12px;color:#0b0b0b}
+.hm .hhead{font-size:11px;color:var(--muted);font-weight:700;text-align:center;padding:2px}
+.hm .hsub{font-size:12px;color:var(--ink2);display:flex;align-items:center}
+.chips{display:flex;flex-wrap:wrap;gap:7px}
+.chip{border-radius:999px;padding:4px 11px;font-size:12px;font-weight:700;border:1px solid var(--ring)}
+.chip.g{background:rgba(12,163,12,.14);color:var(--good)}
+.chip.r{background:rgba(208,59,59,.14);color:var(--crit)}
+ol.donext{margin:0;padding-left:18px}
+ol.donext li{margin:6px 0}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--grid)}
+th{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.03em}
+td.num{text-align:right;font-variant-numeric:tabular-nums}
+.pill{display:inline-block;border-radius:6px;padding:2px 7px;font-size:11px;font-weight:700}
+svg{display:block;width:100%;height:auto}
+.tt{position:fixed;pointer-events:none;background:var(--ink);color:var(--surface);font-size:12px;
+  padding:6px 9px;border-radius:7px;opacity:0;transition:opacity .08s;z-index:10;white-space:nowrap}
+.legend{display:flex;gap:14px;font-size:12px;color:var(--ink2);margin-top:8px;flex-wrap:wrap}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.hide{display:none!important}
+.foot{color:var(--muted);font-size:11px;text-align:center;margin:22px 0 8px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>🎓 FMGE — Study Dashboard</h1>
+    </div>
+    <div class="spacer"></div>
+    <div class="seg" id="viewseg">
+      <button data-v="candidate" class="on">Candidate</button>
+      <button data-v="coach">Coach</button>
+    </div>
+    <button class="icon-btn" id="themebtn">◐ Theme</button>
+  </header>
+  <div class="sub" id="asof"></div>
+
+  <div class="filters" id="filters">
+    <label>Cycle<select id="f-cycle"></select></label>
+    <label>Subject<select id="f-subject"></select></label>
+    <label>Difficulty<select id="f-difficulty"><option>All</option><option value="E">Easy</option><option value="M">Medium</option><option value="H">Hard</option></select></label>
+    <label>Part<select id="f-part"><option>All</option><option value="A">A · Pre/Para-clinical</option><option value="B">B · Clinical</option></select></label>
+  </div>
+
+  <div id="root"></div>
+  <div class="foot" id="foot"></div>
+</div>
+<div class="tt" id="tt"></div>
+
+<script>
+const DATA = {"rows": [[1, "Microbiology", "A", "E", 1, "Solid"], [1, "Microbiology", "A", "E", 1, "Solid"], [1, "Microbiology", "A", "E", 0, "Shaky / partial"], [1, "Microbiology", "A", "E", 0, "Shaky / partial"], [1, "Microbiology", "A", "E", 1, "Solid"], [1, "Microbiology", "A", "M", 0, "Shaky / partial"], [1, "Microbiology", "A", "E", 1, "Solid"], [1, "Microbiology", "A", "E", 0, "Shaky / partial"], [1, "Microbiology", "A", "E", 1, "Solid"], [1, "Microbiology", "A", "H", 1, "Solid"], [1, "Microbiology", "A", "H", 1, "Solid"], [1, "Microbiology", "A", "M", 1, "Solid"], [1, "Microbiology", "A", "E", 1, "Solid"], [1, "Microbiology", "A", "E", 1, "Solid"], [1, "Microbiology", "A", "H", 1, "Solid"], [1, "Microbiology", "A", "E", 0, "Concept gap"], [1, "Microbiology", "A", "M", 0, "Concept gap"], [1, "Microbiology", "A", "H", 1, "Solid"], [1, "Pathology", "A", "E", 1, "Solid"], [1, "Pathology", "A", "M", 0, "Concept gap"], [1, "Pathology", "A", "M", 1, "Solid"], [1, "Pathology", "A", "E", 1, "Solid"], [1, "Pathology", "A", "M", 0, "Concept gap"], [1, "Pathology", "A", "E", 0, "Concept gap"], [1, "Pathology", "A", "E", 1, "Solid"], [1, "Pathology", "A", "H", 0, "Concept gap"], [1, "Pathology", "A", "M", 1, "Solid"], [1, "Pathology", "A", "E", 1, "Solid"], [1, "Pathology", "A", "M", 0, "Shaky / partial"], [1, "Pathology", "A", "M", 0, "Shaky / partial"], [1, "Pathology", "A", "M", 1, "Solid"], [1, "Pathology", "A", "E", 1, "Solid"], [1, "Pathology", "A", "H", 0, "Concept gap"], [1, "Pathology", "A", "M", 1, "Solid"], [1, "Pathology", "A", "E", 1, "Solid"], [1, "Pathology", "A", "E", 0, "Concept gap"], [1, "Pathology", "A", "E", 0, "Concept gap"], [1, "Pathology", "A", "H", 0, "Concept gap"], [1, "Pathology", "A", "E", 0, "Concept gap"], [1, "Pathology", "A", "M", 0, "Concept gap"], [1, "Pathology", "A", "E", 0, "Concept gap"], [1, "Pathology", "A", "M", 0, "Concept gap"], [1, "Pharmacology", "A", "E", 0, "Concept gap"], [1, "Pharmacology", "A", "H", 1, "Solid"], [1, "Pharmacology", "A", "E", 0, "Concept gap"], [1, "Pharmacology", "A", "M", 0, "Concept gap"], [1, "Pharmacology", "A", "E", 0, "Concept gap"], [1, "Pharmacology", "A", "E", 0, "Concept gap"], [1, "Pharmacology", "A", "M", 1, "Solid"], [1, "Pharmacology", "A", "M", 0, "Concept gap"], [1, "Pharmacology", "A", "E", 1, "Solid"], [1, "Pharmacology", "A", "M", 1, "Solid"], [1, "Pharmacology", "A", "E", 1, "Solid"], [1, "Pharmacology", "A", "H", 1, "Solid"], [1, "Pharmacology", "A", "H", 1, "Solid"], [1, "Pharmacology", "A", "M", 0, "Shaky / partial"], [1, "Pharmacology", "A", "M", 0, "Shaky / partial"], [1, "Pharmacology", "A", "E", 1, "Solid"], [1, "Pharmacology", "A", "M", 0, "Concept gap"], [1, "Pharmacology", "A", "M", 1, "Solid"], [1, "Pharmacology", "A", "H", 1, "Solid"], [1, "Pharmacology", "A", "E", 1, "Solid"], [1, "Pharmacology", "A", "M", 0, "Concept gap"], [1, "Pharmacology", "A", "H", 0, "Concept gap"], [1, "Pharmacology", "A", "E", 0, "Concept gap"], [1, "Pharmacology", "A", "E", 1, "Solid"], [1, "Medicine", "B", "M", 1, "Solid"], [1, "Medicine", "B", "E", 0, "Shaky / partial"], [1, "Medicine", "B", "M", 1, "Solid"], [1, "Medicine", "B", "E", 0, "Concept gap"], [1, "Medicine", "B", "E", 0, "Concept gap"], [1, "Medicine", "B", "E", 0, "Shaky / partial"], [1, "Medicine", "B", "E", 0, "Shaky / partial"], [1, "Medicine", "B", "E", 0, "Concept gap"], [1, "Medicine", "B", "H", 0, "Concept gap"], [1, "Medicine", "B", "E", 0, "Concept gap"], [1, "Medicine", "B", "M", 1, "Solid"], [1, "Medicine", "B", "M", 0, "Shaky / partial"], [1, "Medicine", "B", "H", 1, "Solid"], [1, "Medicine", "B", "M", 0, "Shaky / partial"], [1, "Medicine", "B", "E", 1, "Solid"], [1, "Medicine", "B", "M", 1, "Solid"], [1, "Medicine", "B", "E", 1, "Solid"], [1, "Medicine", "B", "M", 1, "Solid"], [1, "Medicine", "B", "M", 0, "Shaky / partial"], [1, "Medicine", "B", "E", 0, "Shaky / partial"], [1, "PSM (Community Medicine)", "B", "E", 1, "Solid"], [1, "PSM (Community Medicine)", "B", "M", 1, "Solid"], [1, "PSM (Community Medicine)", "B", "M", 0, "Concept gap"], [1, "PSM (Community Medicine)", "B", "E", 1, "Solid"], [1, "PSM (Community Medicine)", "B", "M", 0, "Concept gap"], [1, "PSM (Community Medicine)", "B", "E", 0, "Concept gap"], [1, "PSM (Community Medicine)", "B", "M", 0, "Concept gap"], [1, "PSM (Community Medicine)", "B", "E", 1, "Solid"], [1, "PSM (Community Medicine)", "B", "M", 0, "Shaky / partial"], [1, "PSM (Community Medicine)", "B", "H", 1, "Solid"], [1, "PSM (Community Medicine)", "B", "E", 1, "Solid"], [1, "PSM (Community Medicine)", "B", "E", 1, "Solid"], [1, "PSM (Community Medicine)", "B", "E", 1, "Solid"], [1, "PSM (Community Medicine)", "B", "E", 1, "Solid"], [2, "Anatomy", "A", "H", 1, "Solid"], [2, "Anatomy", "A", "E", 0, "Shaky / partial"], [2, "Anatomy", "A", "M", 0, "Shaky / partial"], [2, "Anatomy", "A", "E", 1, "Solid"], [2, "Anatomy", "A", "M", 1, "Solid"], [2, "Anatomy", "A", "H", 0, "Shaky / partial"], [2, "Anatomy", "A", "E", 1, "Solid"], [2, "Biochemistry", "A", "E", 0, "Concept gap"], [2, "Biochemistry", "A", "E", 1, "Solid"], [2, "Biochemistry", "A", "H", 0, "Concept gap"], [2, "Biochemistry", "A", "H", 1, "Solid"], [2, "Biochemistry", "A", "E", 1, "Solid"], [2, "Biochemistry", "A", "E", 1, "Solid"], [2, "Forensic Medicine (FMT)", "A", "E", 1, "Solid"], [2, "Microbiology", "A", "E", 1, "Solid"], [2, "Microbiology", "A", "E", 0, "Persistent wrong belief"], [2, "Microbiology", "A", "E", 1, "Solid"], [2, "Microbiology", "A", "M", 0, "Persistent wrong belief"], [2, "Microbiology", "A", "E", 0, "Persistent wrong belief"], [2, "Microbiology", "A", "E", 1, "Solid"], [2, "Microbiology", "A", "H", 1, "Solid"], [2, "Microbiology", "A", "M", 1, "Solid"], [2, "Microbiology", "A", "E", 0, "Persistent wrong belief"], [2, "Microbiology", "A", "M", 0, "Persistent wrong belief"], [2, "Pathology", "A", "E", 0, "Regressed"], [2, "Pathology", "A", "M", 1, "Solid"], [2, "Pathology", "A", "E", 0, "Regressed"], [2, "Pathology", "A", "E", 0, "Persistent wrong belief"], [2, "Pathology", "A", "M", 1, "Solid"], [2, "Pathology", "A", "E", 0, "Regressed"], [2, "Pathology", "A", "M", 0, "Regressed"], [2, "Pathology", "A", "E", 0, "Regressed"], [2, "Pathology", "A", "M", 1, "Solid"], [2, "Pathology", "A", "E", 1, "Solid"], [2, "Pathology", "A", "E", 0, "Persistent wrong belief"], [2, "Pathology", "A", "E", 0, "Persistent wrong belief"], [2, "Pathology", "A", "E", 0, "Persistent wrong belief"], [2, "Pathology", "A", "E", 0, "Persistent wrong belief"], [2, "Pharmacology", "A", "E", 0, "Persistent wrong belief"], [2, "Pharmacology", "A", "E", 0, "Persistent wrong belief"], [2, "Pharmacology", "A", "E", 1, "Solid"], [2, "Pharmacology", "A", "M", 1, "Solid"], [2, "Pharmacology", "A", "E", 1, "Solid"], [2, "Pharmacology", "A", "E", 1, "Solid"], [2, "Pharmacology", "A", "H", 1, "Solid"], [2, "Pharmacology", "A", "M", 1, "Solid"], [2, "Pharmacology", "A", "M", 0, "Persistent wrong belief"], [2, "Pharmacology", "A", "M", 0, "Persistent wrong belief"], [2, "Pharmacology", "A", "M", 1, "Solid"], [2, "Pharmacology", "A", "H", 1, "Solid"], [2, "Pharmacology", "A", "M", 0, "Persistent wrong belief"], [2, "Pharmacology", "A", "H", 0, "Persistent wrong belief"], [2, "Physiology", "A", "M", 0, "Concept gap"], [2, "Physiology", "A", "E", 1, "Solid"], [2, "Physiology", "A", "E", 0, "Careless slip"], [2, "Physiology", "A", "E", 0, "Shaky / partial"], [2, "Physiology", "A", "M", 0, "Shaky / partial"], [2, "Physiology", "A", "H", 1, "Solid"], [2, "Medicine", "B", "M", 1, "Solid"], [2, "Medicine", "B", "E", 0, "Persistent wrong belief"], [2, "Medicine", "B", "E", 0, "Persistent wrong belief"], [2, "Medicine", "B", "M", 1, "Solid"], [2, "Medicine", "B", "E", 0, "Persistent wrong belief"], [2, "Medicine", "B", "E", 1, "Solid"], [2, "Medicine", "B", "E", 0, "Persistent wrong belief"], [2, "Medicine", "B", "H", 0, "Persistent wrong belief"], [2, "Medicine", "B", "M", 1, "Solid"], [2, "Medicine", "B", "M", 1, "Solid"], [2, "Medicine", "B", "M", 1, "Solid"], [2, "Medicine", "B", "M", 1, "Solid"], [2, "Medicine", "B", "E", 1, "Solid"], [2, "Medicine", "B", "M", 1, "Solid"], [2, "Medicine", "B", "M", 0, "Persistent wrong belief"], [2, "Obstetrics & Gynaecology", "B", "E", 1, "Solid"], [2, "Obstetrics & Gynaecology", "B", "E", 1, "Solid"], [2, "Obstetrics & Gynaecology", "B", "E", 1, "Solid"], [2, "Obstetrics & Gynaecology", "B", "M", 1, "Solid"], [2, "Obstetrics & Gynaecology", "B", "E", 1, "Solid"], [2, "Obstetrics & Gynaecology", "B", "E", 0, "Shaky / partial"], [2, "PSM (Community Medicine)", "B", "E", 0, "Regressed"], [2, "PSM (Community Medicine)", "B", "M", 1, "Solid"], [2, "PSM (Community Medicine)", "B", "M", 0, "Persistent wrong belief"], [2, "PSM (Community Medicine)", "B", "E", 1, "Solid"], [2, "PSM (Community Medicine)", "B", "M", 0, "Persistent wrong belief"], [2, "PSM (Community Medicine)", "B", "E", 0, "Persistent wrong belief"], [2, "PSM (Community Medicine)", "B", "M", 1, "Solid"], [2, "PSM (Community Medicine)", "B", "E", 1, "Solid"], [2, "PSM (Community Medicine)", "B", "E", 1, "Solid"], [2, "PSM (Community Medicine)", "B", "E", 1, "Solid"], [2, "Pediatrics", "B", "E", 0, "Careless slip"], [2, "Pediatrics", "B", "E", 1, "Solid"], [2, "Pediatrics", "B", "E", 0, "Concept gap"], [2, "Pediatrics", "B", "E", 1, "Solid"], [2, "Surgery", "B", "E", 1, "Solid"], [2, "Surgery", "B", "E", 0, "Concept gap"], [2, "Surgery", "B", "E", 1, "Solid"], [2, "Surgery", "B", "E", 1, "Solid"], [2, "Surgery", "B", "M", 0, "Concept gap"], [2, "Surgery", "B", "E", 1, "Solid"], [2, "Surgery", "B", "E", 1, "Solid"], [3, "Anatomy", "A", "H", 1, "Solid"], [3, "Anatomy", "A", "H", 1, "Solid"], [3, "Anatomy", "A", "E", 0, "Persistent wrong belief"], [3, "Anatomy", "A", "M", 1, "Solid"], [3, "Anatomy", "A", "M", 1, "Solid"], [3, "Anatomy", "A", "M", 1, "Solid"], [3, "Anatomy", "A", "H", 1, "Solid"], [3, "Anatomy", "A", "E", 1, "Solid"], [3, "Anatomy", "A", "E", 0, "Shaky / partial"], [3, "Anatomy", "A", "E", 0, "Shaky / partial"], [3, "Anatomy", "A", "M", 1, "Solid"], [3, "Anatomy", "A", "H", 1, "Solid"], [3, "Anatomy", "A", "H", 1, "Solid"], [3, "Anatomy", "A", "M", 0, "Shaky / partial"], [3, "Biochemistry", "A", "H", 0, "Concept gap"], [3, "Biochemistry", "A", "M", 1, "Solid"], [3, "Biochemistry", "A", "M", 1, "Solid"], [3, "Biochemistry", "A", "H", 0, "Concept gap"], [3, "Biochemistry", "A", "H", 0, "Persistent wrong belief"], [3, "Biochemistry", "A", "H", 1, "Solid"], [3, "Biochemistry", "A", "M", 1, "Solid"], [3, "Biochemistry", "A", "M", 0, "Concept gap"], [3, "Biochemistry", "A", "M", 0, "Concept gap"], [3, "Forensic Medicine (FMT)", "A", "M", 1, "Solid"], [3, "Forensic Medicine (FMT)", "A", "H", 1, "Solid"], [3, "Forensic Medicine (FMT)", "A", "H", 1, "Solid"], [3, "Forensic Medicine (FMT)", "A", "M", 0, "Shaky / partial"], [3, "Forensic Medicine (FMT)", "A", "M", 0, "Concept gap"], [3, "Forensic Medicine (FMT)", "A", "M", 1, "Solid"], [3, "Forensic Medicine (FMT)", "A", "E", 0, "Concept gap"], [3, "Forensic Medicine (FMT)", "A", "H", 1, "Solid"], [3, "Forensic Medicine (FMT)", "A", "M", 1, "Solid"], [3, "Forensic Medicine (FMT)", "A", "M", 0, "Concept gap"], [3, "Forensic Medicine (FMT)", "A", "E", 1, "Solid"], [3, "Forensic Medicine (FMT)", "A", "M", 0, "Concept gap"], [3, "Microbiology", "A", "E", 1, "Solid"], [3, "Microbiology", "A", "E", 1, "Solid"], [3, "Microbiology", "A", "H", 1, "Solid"], [3, "Microbiology", "A", "M", 0, "Shaky / partial"], [3, "Microbiology", "A", "E", 1, "Solid"], [3, "Microbiology", "A", "E", 1, "Solid"], [3, "Microbiology", "A", "E", 1, "Solid"], [3, "Microbiology", "A", "H", 0, "Shaky / partial"], [3, "Microbiology", "A", "M", 1, "Solid"], [3, "Microbiology", "A", "M", 1, "Solid"], [3, "Microbiology", "A", "M", 1, "Solid"], [3, "Microbiology", "A", "H", 1, "Solid"], [3, "Microbiology", "A", "M", 0, "Shaky / partial"], [3, "Microbiology", "A", "E", 1, "Solid"], [3, "Microbiology", "A", "E", 1, "Solid"], [3, "Microbiology", "A", "H", 1, "Solid"], [3, "Microbiology", "A", "M", 0, "Shaky / partial"], [3, "Microbiology", "A", "E", 1, "Solid"], [3, "Microbiology", "A", "H", 1, "Solid"], [3, "Microbiology", "A", "H", 0, "Shaky / partial"], [3, "Microbiology", "A", "H", 1, "Solid"], [3, "Microbiology", "A", "M", 1, "Solid"], [3, "Microbiology", "A", "E", 0, "Regressed"], [3, "Microbiology", "A", "H", 0, "Shaky / partial"], [3, "Microbiology", "A", "M", 0, "Shaky / partial"], [3, "Microbiology", "A", "E", 0, "Regressed"], [3, "Microbiology", "A", "H", 0, "Regressed"], [3, "Microbiology", "A", "E", 0, "Persistent wrong belief"], [3, "Microbiology", "A", "H", 0, "Concept gap"], [3, "Microbiology", "A", "M", 0, "Persistent wrong belief"], [3, "Microbiology", "A", "H", 1, "Solid"], [3, "Microbiology", "A", "H", 0, "Concept gap"], [3, "Pathology", "A", "E", 1, "Solid"], [3, "Pathology", "A", "M", 0, "Persistent wrong belief"], [3, "Pathology", "A", "H", 0, "Concept gap"], [3, "Pathology", "A", "M", 0, "Concept gap"], [3, "Pathology", "A", "M", 1, "Solid"], [3, "Pathology", "A", "E", 1, "Solid"], [3, "Pathology", "A", "M", 0, "Persistent wrong belief"], [3, "Pathology", "A", "H", 0, "Concept gap"], [3, "Pathology", "A", "M", 0, "Concept gap"], [3, "Pathology", "A", "E", 1, "Solid"], [3, "Pathology", "A", "E", 1, "Solid"], [3, "Pathology", "A", "H", 0, "Persistent wrong belief"], [3, "Pathology", "A", "H", 0, "Concept gap"], [3, "Pathology", "A", "M", 1, "Solid"], [3, "Pathology", "A", "E", 0, "Persistent wrong belief"], [3, "Pathology", "A", "M", 0, "Persistent wrong belief"], [3, "Pathology", "A", "M", 1, "Solid"], [3, "Pathology", "A", "H", 1, "Solid"], [3, "Pathology", "A", "M", 0, "Shaky / partial"], [3, "Pathology", "A", "M", 1, "Solid"], [3, "Pathology", "A", "H", 0, "Concept gap"], [3, "Pathology", "A", "M", 0, "Concept gap"], [3, "Pathology", "A", "E", 1, "Solid"], [3, "Pathology", "A", "H", 0, "Persistent wrong belief"], [3, "Pathology", "A", "H", 0, "Concept gap"], [3, "Pathology", "A", "M", 1, "Solid"], [3, "Pathology", "A", "E", 1, "Solid"], [3, "Pathology", "A", "E", 1, "Solid"], [3, "Pathology", "A", "E", 1, "Solid"], [3, "Pathology", "A", "H", 0, "Persistent wrong belief"], [3, "Pathology", "A", "H", 0, "Concept gap"], [3, "Pathology", "A", "E", 1, "Solid"], [3, "Pathology", "A", "M", 1, "Solid"], [3, "Pathology", "A", "H", 0, "Concept gap"], [3, "Pathology", "A", "M", 1, "Solid"], [3, "Pathology", "A", "E", 1, "Solid"], [3, "Pathology", "A", "M", 0, "Persistent wrong belief"], [3, "Pathology", "A", "H", 0, "Concept gap"], [3, "Pathology", "A", "M", 1, "Solid"], [3, "Pharmacology", "A", "E", 1, "Solid"], [3, "Pharmacology", "A", "H", 0, "Regressed"], [3, "Pharmacology", "A", "H", 0, "Concept gap"], [3, "Pharmacology", "A", "E", 1, "Solid"], [3, "Pharmacology", "A", "M", 0, "Persistent wrong belief"], [3, "Pharmacology", "A", "H", 0, "Concept gap"], [3, "Pharmacology", "A", "M", 1, "Solid"], [3, "Pharmacology", "A", "E", 0, "Persistent wrong belief"], [3, "Pharmacology", "A", "E", 1, "Solid"], [3, "Pharmacology", "A", "M", 0, "Regressed"], [3, "Pharmacology", "A", "H", 1, "Solid"], [3, "Pharmacology", "A", "M", 0, "Concept gap"], [3, "Pharmacology", "A", "M", 0, "Persistent wrong belief"], [3, "Pharmacology", "A", "E", 1, "Solid"], [3, "Pharmacology", "A", "M", 1, "Solid"], [3, "Pharmacology", "A", "H", 1, "Solid"], [3, "Pharmacology", "A", "M", 1, "Solid"], [3, "Pharmacology", "A", "E", 1, "Solid"], [3, "Pharmacology", "A", "H", 1, "Solid"], [3, "Pharmacology", "A", "M", 1, "Solid"], [3, "Pharmacology", "A", "H", 1, "Solid"], [3, "Pharmacology", "A", "M", 1, "Solid"], [3, "Pharmacology", "A", "M", 1, "Solid"], [3, "Pharmacology", "A", "M", 0, "Shaky / partial"], [3, "Pharmacology", "A", "H", 1, "Solid"], [3, "Pharmacology", "A", "M", 1, "Solid"], [3, "Pharmacology", "A", "E", 0, "Regressed"], [3, "Pharmacology", "A", "M", 1, "Solid"], [3, "Pharmacology", "A", "H", 0, "Concept gap"], [3, "Pharmacology", "A", "M", 0, "Concept gap"], [3, "Pharmacology", "A", "M", 0, "Regressed"], [3, "Pharmacology", "A", "H", 1, "Solid"], [3, "Pharmacology", "A", "E", 0, "Regressed"], [3, "Pharmacology", "A", "M", 0, "Shaky / partial"], [3, "Pharmacology", "A", "M", 1, "Solid"], [3, "Pharmacology", "A", "H", 1, "Solid"], [3, "Pharmacology", "A", "H", 0, "Concept gap"], [3, "Pharmacology", "A", "E", 0, "Persistent wrong belief"], [3, "Pharmacology", "A", "E", 1, "Solid"], [3, "Pharmacology", "A", "H", 1, "Solid"], [3, "Physiology", "A", "M", 0, "Concept gap"], [3, "Physiology", "A", "H", 0, "Shaky / partial"], [3, "Physiology", "A", "E", 1, "Solid"], [3, "Physiology", "A", "H", 1, "Solid"], [3, "Physiology", "A", "E", 1, "Solid"], [3, "Physiology", "A", "M", 1, "Solid"], [3, "Physiology", "A", "H", 1, "Solid"], [3, "Physiology", "A", "M", 1, "Solid"], [3, "Physiology", "A", "M", 1, "Solid"], [3, "Physiology", "A", "E", 0, "Shaky / partial"], [3, "Physiology", "A", "H", 0, "Concept gap"], [3, "Physiology", "A", "M", 0, "Concept gap"], [3, "Anaesthesia", "B", "H", 0, "Concept gap"], [3, "Anaesthesia", "B", "H", 0, "Concept gap"], [3, "Anaesthesia", "B", "M", 0, "Concept gap"], [3, "Anaesthesia", "B", "M", 1, "Solid"], [3, "Anaesthesia", "B", "H", 0, "Concept gap"], [3, "Dermatology", "B", "M", 0, "Concept gap"], [3, "Dermatology", "B", "H", 0, "Concept gap"], [3, "Dermatology", "B", "M", 0, "Concept gap"], [3, "Dermatology", "B", "H", 1, "Solid"], [3, "ENT", "B", "H", 1, "Solid"], [3, "ENT", "B", "E", 0, "Concept gap"], [3, "ENT", "B", "M", 0, "Concept gap"], [3, "ENT", "B", "M", 1, "Solid"], [3, "ENT", "B", "M", 1, "Solid"], [3, "Medicine", "B", "M", 1, "Solid"], [3, "Medicine", "B", "E", 1, "Solid"], [3, "Medicine", "B", "M", 1, "Solid"], [3, "Medicine", "B", "H", 1, "Solid"], [3, "Medicine", "B", "E", 1, "Solid"], [3, "Medicine", "B", "M", 0, "Concept gap"], [3, "Medicine", "B", "H", 0, "Concept gap"], [3, "Medicine", "B", "H", 0, "Concept gap"], [3, "Medicine", "B", "M", 0, "Concept gap"], [3, "Medicine", "B", "H", 1, "Solid"], [3, "Medicine", "B", "H", 1, "Solid"], [3, "Medicine", "B", "M", 0, "Shaky / partial"], [3, "Medicine", "B", "E", 1, "Solid"], [3, "Medicine", "B", "M", 1, "Solid"], [3, "Medicine", "B", "M", 0, "Concept gap"], [3, "Medicine", "B", "H", 1, "Solid"], [3, "Medicine", "B", "M", 0, "Concept gap"], [3, "Medicine", "B", "E", 1, "Solid"], [3, "Medicine", "B", "H", 1, "Solid"], [3, "Medicine", "B", "M", 0, "Shaky / partial"], [3, "Medicine", "B", "E", 0, "Persistent wrong belief"], [3, "Medicine", "B", "H", 1, "Solid"], [3, "Medicine", "B", "E", 0, "Persistent wrong belief"], [3, "Medicine", "B", "H", 0, "Concept gap"], [3, "Medicine", "B", "M", 1, "Solid"], [3, "Medicine", "B", "M", 0, "Regressed"], [3, "Medicine", "B", "M", 1, "Solid"], [3, "Medicine", "B", "H", 1, "Solid"], [3, "Medicine", "B", "H", 0, "Shaky / partial"], [3, "Medicine", "B", "H", 1, "Solid"], [3, "Medicine", "B", "H", 1, "Solid"], [3, "Medicine", "B", "H", 0, "Concept gap"], [3, "Medicine", "B", "M", 1, "Solid"], [3, "Medicine", "B", "M", 1, "Solid"], [3, "Medicine", "B", "H", 1, "Solid"], [3, "Medicine", "B", "H", 1, "Solid"], [3, "Medicine", "B", "M", 1, "Solid"], [3, "Medicine", "B", "E", 1, "Solid"], [3, "Medicine", "B", "M", 0, "Shaky / partial"], [3, "Medicine", "B", "H", 0, "Shaky / partial"], [3, "Medicine", "B", "M", 1, "Solid"], [3, "Medicine", "B", "M", 1, "Solid"], [3, "Medicine", "B", "M", 1, "Solid"], [3, "Medicine", "B", "E", 0, "Persistent wrong belief"], [3, "Medicine", "B", "H", 1, "Solid"], [3, "Medicine", "B", "M", 1, "Solid"], [3, "Obstetrics & Gynaecology", "B", "E", 1, "Solid"], [3, "Obstetrics & Gynaecology", "B", "E", 1, "Solid"], [3, "Obstetrics & Gynaecology", "B", "E", 1, "Solid"], [3, "Obstetrics & Gynaecology", "B", "M", 1, "Solid"], [3, "Obstetrics & Gynaecology", "B", "E", 1, "Solid"], [3, "Obstetrics & Gynaecology", "B", "E", 1, "Solid"], [3, "Obstetrics & Gynaecology", "B", "M", 0, "Shaky / partial"], [3, "Obstetrics & Gynaecology", "B", "H", 1, "Solid"], [3, "Obstetrics & Gynaecology", "B", "M", 1, "Solid"], [3, "Obstetrics & Gynaecology", "B", "H", 1, "Solid"], [3, "Obstetrics & Gynaecology", "B", "H", 1, "Solid"], [3, "Obstetrics & Gynaecology", "B", "M", 1, "Solid"], [3, "Obstetrics & Gynaecology", "B", "H", 1, "Solid"], [3, "Obstetrics & Gynaecology", "B", "M", 1, "Solid"], [3, "Ophthalmology", "B", "M", 0, "Concept gap"], [3, "Ophthalmology", "B", "H", 0, "Concept gap"], [3, "Ophthalmology", "B", "M", 0, "Concept gap"], [3, "Ophthalmology", "B", "H", 1, "Solid"], [3, "Ophthalmology", "B", "M", 1, "Solid"], [3, "Ophthalmology", "B", "H", 0, "Concept gap"], [3, "Ophthalmology", "B", "M", 0, "Concept gap"], [3, "Ophthalmology", "B", "E", 0, "Concept gap"], [3, "Orthopedics", "B", "M", 0, "Concept gap"], [3, "Orthopedics", "B", "E", 1, "Solid"], [3, "Orthopedics", "B", "H", 0, "Concept gap"], [3, "Orthopedics", "B", "H", 0, "Concept gap"], [3, "Orthopedics", "B", "H", 1, "Solid"], [3, "PSM (Community Medicine)", "B", "E", 0, "Persistent wrong belief"], [3, "PSM (Community Medicine)", "B", "M", 1, "Solid"], [3, "PSM (Community Medicine)", "B", "M", 1, "Solid"], [3, "PSM (Community Medicine)", "B", "E", 0, "Concept gap"], [3, "PSM (Community Medicine)", "B", "H", 0, "Concept gap"], [3, "PSM (Community Medicine)", "B", "M", 0, "Concept gap"], [3, "PSM (Community Medicine)", "B", "E", 1, "Solid"], [3, "PSM (Community Medicine)", "B", "M", 0, "Persistent wrong belief"], [3, "PSM (Community Medicine)", "B", "E", 1, "Solid"], [3, "PSM (Community Medicine)", "B", "H", 0, "Concept gap"], [3, "PSM (Community Medicine)", "B", "M", 0, "Persistent wrong belief"], [3, "PSM (Community Medicine)", "B", "E", 1, "Solid"], [3, "PSM (Community Medicine)", "B", "H", 1, "Solid"], [3, "PSM (Community Medicine)", "B", "M", 0, "Concept gap"], [3, "PSM (Community Medicine)", "B", "M", 1, "Solid"], [3, "PSM (Community Medicine)", "B", "H", 0, "Regressed"], [3, "PSM (Community Medicine)", "B", "H", 0, "Shaky / partial"], [3, "PSM (Community Medicine)", "B", "E", 1, "Solid"], [3, "PSM (Community Medicine)", "B", "H", 1, "Solid"], [3, "PSM (Community Medicine)", "B", "M", 1, "Solid"], [3, "PSM (Community Medicine)", "B", "E", 1, "Solid"], [3, "PSM (Community Medicine)", "B", "M", 1, "Solid"], [3, "PSM (Community Medicine)", "B", "H", 1, "Solid"], [3, "PSM (Community Medicine)", "B", "M", 1, "Solid"], [3, "PSM (Community Medicine)", "B", "E", 1, "Solid"], [3, "PSM (Community Medicine)", "B", "M", 1, "Solid"], [3, "PSM (Community Medicine)", "B", "H", 1, "Solid"], [3, "PSM (Community Medicine)", "B", "M", 1, "Solid"], [3, "Pediatrics", "B", "E", 1, "Solid"], [3, "Pediatrics", "B", "H", 1, "Solid"], [3, "Pediatrics", "B", "H", 1, "Solid"], [3, "Pediatrics", "B", "E", 1, "Solid"], [3, "Pediatrics", "B", "E", 1, "Solid"], [3, "Pediatrics", "B", "M", 0, "Concept gap"], [3, "Pediatrics", "B", "H", 0, "Concept gap"], [3, "Pediatrics", "B", "H", 1, "Solid"], [3, "Pediatrics", "B", "M", 0, "Concept gap"], [3, "Pediatrics", "B", "E", 1, "Solid"], [3, "Psychiatry", "B", "H", 0, "Concept gap"], [3, "Psychiatry", "B", "H", 1, "Solid"], [3, "Psychiatry", "B", "M", 1, "Solid"], [3, "Psychiatry", "B", "M", 0, "Shaky / partial"], [3, "Psychiatry", "B", "H", 1, "Solid"], [3, "Radiology", "B", "H", 1, "Solid"], [3, "Radiology", "B", "H", 1, "Solid"], [3, "Radiology", "B", "M", 1, "Solid"], [3, "Radiology", "B", "M", 1, "Solid"], [3, "Surgery", "B", "E", 1, "Solid"], [3, "Surgery", "B", "E", 1, "Solid"], [3, "Surgery", "B", "H", 0, "Concept gap"], [3, "Surgery", "B", "E", 0, "Regressed"], [3, "Surgery", "B", "E", 1, "Solid"], [3, "Surgery", "B", "M", 0, "Persistent wrong belief"], [3, "Surgery", "B", "E", 1, "Solid"], [3, "Surgery", "B", "E", 1, "Solid"]], "scorecard": [{"cycle": 1, "score": 51, "qs": 100, "accuracy": 51, "projected": 153, "d150": 0, "d195": 42, "coverage": 46, "mastered": 16, "stage": 1}, {"cycle": 2, "score": 55, "qs": 100, "accuracy": 55, "projected": 165, "d150": 0, "d195": 30, "coverage": 78, "mastered": 40, "stage": 1}, {"cycle": 3, "score": 176, "qs": 300, "accuracy": 59, "projected": 176, "d150": 0, "d195": 19, "coverage": 99, "mastered": 45, "stage": 3}], "weak": [{"subject": "Anaesthesia", "topic": "Preop assessment (ASA), airway management", "accuracy": 0, "mastery": "learning", "rec": "FIX \u2014 persistent/repeated miss on this concept; relearn from source, re-test with a new question"}, {"subject": "Dermatology", "topic": "Leprosy (types, lepra reactions)", "accuracy": 0, "mastery": "learning", "rec": "FIX \u2014 persistent/repeated miss on this concept; relearn from source, re-test with a new question"}, {"subject": "Ophthalmology", "topic": "Diabetic retinopathy, retinal detachment", "accuracy": 0, "mastery": "learning", "rec": "FIX \u2014 persistent/repeated miss on this concept; relearn from source, re-test with a new question"}, {"subject": "PSM (Community Medicine)", "topic": "Epidemiology & control: TB, malaria, HIV", "accuracy": 17, "mastery": "learning", "rec": "FIX \u2014 persistent/repeated miss on this concept; relearn from source, re-test with a new question"}, {"subject": "Pathology", "topic": "Atherosclerosis, MI, vasculitis", "accuracy": 17, "mastery": "learning", "rec": "FIX \u2014 persistent/repeated miss on this concept; relearn from source, re-test with a new question"}, {"subject": "Microbiology", "topic": "Hepatitis viruses (serology markers)", "accuracy": 25, "mastery": "learning", "rec": "FIX \u2014 persistent/repeated miss on this concept; relearn from source, re-test with a new question"}, {"subject": "Medicine", "topic": "Dengue, malaria, enteric fever", "accuracy": 29, "mastery": "learning", "rec": "FIX \u2014 persistent/repeated miss on this concept; relearn from source, re-test with a new question"}, {"subject": "Pathology", "topic": "Cell injury, adaptation, necrosis vs apoptosis", "accuracy": 29, "mastery": "learning", "rec": "FIX \u2014 persistent/repeated miss on this concept; relearn from source, re-test with a new question"}, {"subject": "Pathology", "topic": "Acute & chronic inflammation, healing/repair", "accuracy": 29, "mastery": "learning", "rec": "FIX \u2014 persistent/repeated miss on this concept; relearn from source, re-test with a new question"}, {"subject": "Pathology", "topic": "Glomerulonephritis, nephrotic vs nephritic", "accuracy": 29, "mastery": "learning", "rec": "FIX \u2014 persistent/repeated miss on this concept; relearn from source, re-test with a new question"}, {"subject": "Pharmacology", "topic": "Cholinergic & anticholinergic drugs", "accuracy": 29, "mastery": "learning", "rec": "FIX \u2014 persistent/repeated miss on this concept; relearn from source, re-test with a new question"}, {"subject": "Pharmacology", "topic": "Antihypertensives", "accuracy": 29, "mastery": "learning", "rec": "FIX \u2014 persistent/repeated miss on this concept; relearn from source, re-test with a new question"}, {"subject": "Anaesthesia", "topic": "Local anaesthetics (max doses, toxicity)", "accuracy": 33, "mastery": "learning", "rec": "FIX \u2014 persistent/repeated miss on this concept; relearn from source, re-test with a new question"}, {"subject": "Biochemistry", "topic": "Vitamins & deficiency diseases", "accuracy": 33, "mastery": "learning", "rec": "FIX \u2014 persistent/repeated miss on this concept; relearn from source, re-test with a new question"}, {"subject": "ENT", "topic": "Otitis media, CSOM, hearing loss", "accuracy": 33, "mastery": "revising", "rec": "FIX \u2014 persistent/repeated miss on this concept; relearn from source, re-test with a new question"}], "repeats": {"learned": 35, "retained": 53, "regressed": 12, "stuck": 22}, "meta": {"days": 173, "stage_name": "3 \u00b7 Exam-like", "coverage": 99, "mastered": 45, "exam_target": "9 January 2027", "cand_line": "\ud83c\udfaf You're 26 past the pass line (150) \u2014 keep pushing toward safe clearance (195).", "generated_at": "2026-07-19"}};
+const $ = s => document.querySelector(s);
+const el = (t, c, h) => { const e = document.createElement(t); if(c) e.className = c; if(h!=null) e.innerHTML = h; return e; };
+const PASS = 150, SAFE = 195, TOTAL = 300;
+const state = { view:"candidate", cycle:null, subject:"All", difficulty:"All", part:"All" };
+
+// accuracy -> red/amber/green (number is always shown too, so colour is never the sole signal)
+function accColor(a){ if(a==null) return "var(--grid)"; if(a<50) return "var(--crit)"; if(a<70) return "var(--warn)"; return "var(--good)"; }
+function tierText(a){ return a>=70?"#0b0b0b":(a>=50?"#0b0b0b":"#ffffff"); }
+
+function cycles(){ return [...new Set(DATA.rows.map(r=>r[0]))].sort((a,b)=>a-b); }
+function subjects(){ return [...new Set(DATA.rows.map(r=>r[1]))].sort(); }
+
+function filtered(ignore){
+  return DATA.rows.filter(r=>{
+    if(ignore!=="cycle" && state.cycle!=="All" && r[0]!=+state.cycle) return false;
+    if(ignore!=="subject" && state.subject!=="All" && r[1]!==state.subject) return false;
+    if(ignore!=="difficulty" && state.difficulty!=="All" && r[3]!==state.difficulty) return false;
+    if(ignore!=="part" && state.part!=="All" && r[2]!==state.part) return false;
+    return true;
+  });
+}
+function agg(rows){ const t=rows.length, c=rows.reduce((s,r)=>s+r[4],0); return {att:t, cor:c, acc:t?Math.round(100*c/t):0}; }
+
+function tip(e, html){ const t=$("#tt"); t.innerHTML=html; t.style.opacity=1; t.style.left=(e.clientX+12)+"px"; t.style.top=(e.clientY+12)+"px"; }
+function untip(){ $("#tt").style.opacity=0; }
+
+/* ---- components ---- */
+function kpi(lab, val, note, big){ const k=el("div","kpi"); k.append(el("div","lab",lab), el("div","val",val)); if(note) k.append(el("div","note",note)); return k; }
+
+function trendSVG(){
+  const sc=DATA.scorecard; if(!sc.length) return el("div","cap","No scored cycles yet.");
+  const W=560,H=200,padL=38,padB=26,padT=12,padR=12;
+  const xs=(i)=>padL+(sc.length===1?0:i*(W-padL-padR)/(sc.length-1));
+  const ys=(v)=>padT+(100-v)*(H-padT-padB)/100;
+  const line=sc.map((d,i)=>`${i?'L':'M'}${xs(i)},${ys(d.accuracy)}`).join(" ");
+  let g="";
+  [50,65].forEach((v,i)=>{ g+=`<line x1="${padL}" y1="${ys(v)}" x2="${W-padR}" y2="${ys(v)}" stroke="var(--baseline)" stroke-dasharray="4 4"/>`+
+    `<text x="${W-padR}" y="${ys(v)-4}" fill="var(--muted)" font-size="10" text-anchor="end">${i?'Safe 195':'Pass 150'}</text>`; });
+  [0,25,50,75,100].forEach(v=>{ g+=`<text x="${padL-6}" y="${ys(v)+3}" fill="var(--muted)" font-size="10" text-anchor="end">${v}%</text>`; });
+  const pts=sc.map((d,i)=>`<circle cx="${xs(i)}" cy="${ys(d.accuracy)}" r="5" fill="var(--series1)" stroke="var(--surface)" stroke-width="2" data-i="${i}"/>`+
+    `<text x="${xs(i)}" y="${H-8}" fill="var(--ink2)" font-size="11" text-anchor="middle">C${d.cycle}</text>`).join("");
+  const svg=el("div"); svg.innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Accuracy % by cycle">
+    ${g}<path d="${line}" fill="none" stroke="var(--series1)" stroke-width="2"/>${pts}</svg>`;
+  svg.querySelectorAll("circle").forEach(c=>{ const d=sc[+c.dataset.i];
+    c.addEventListener("mousemove",e=>tip(e,`Cycle ${d.cycle}<br>${d.score}/${d.qs} · ${d.accuracy}% · proj ${d.projected}/300`));
+    c.addEventListener("mouseleave",untip); });
+  return svg;
+}
+
+function subjectBars(){
+  const rows=filtered("subject"); const by={};
+  rows.forEach(r=>{ (by[r[1]]=by[r[1]]||[]).push(r); });
+  const arr=Object.entries(by).map(([s,rs])=>({s, ...agg(rs)})).sort((a,b)=>a.acc-b.acc);
+  const box=el("div"); if(!arr.length){ box.append(el("div","cap","No data for this filter.")); return box; }
+  arr.forEach(d=>{ const row=el("div","bar-row");
+    const track=el("div","bar-track"); const fill=el("div","bar-fill"); fill.style.width=d.acc+"%"; fill.style.background=accColor(d.acc);
+    track.append(fill);
+    row.append(el("div",null,d.s), track, el("div","bar-val",d.acc+"%"));
+    row.addEventListener("mousemove",e=>tip(e,`${d.s}<br>${d.cor}/${d.att} correct · ${d.acc}%`));
+    row.addEventListener("mouseleave",untip);
+    box.append(row); });
+  return box;
+}
+
+function heatmap(){
+  const rows=filtered("difficulty"); const subs=[...new Set(rows.map(r=>r[1]))].sort();
+  const diffs=[["E","Easy"],["M","Medium"],["H","Hard"]];
+  const box=el("div","hm"); box.style.gridTemplateColumns="150px repeat(3,1fr)";
+  box.append(el("div","hhead",""), ...diffs.map(d=>el("div","hhead",d[1])));
+  if(!subs.length){ const c=el("div","cap","No data."); c.style.gridColumn="1/5"; box.append(c); return box; }
+  subs.forEach(s=>{ box.append(el("div","hsub",s));
+    diffs.forEach(([code])=>{ const rs=rows.filter(r=>r[1]===s&&r[3]===code); const a=agg(rs);
+      const cell=el("div","hcell", rs.length? a.acc : "·");
+      cell.style.background=rs.length?accColor(a.acc):"var(--grid)"; cell.style.color=rs.length?tierText(a.acc):"var(--muted)";
+      if(rs.length){ cell.addEventListener("mousemove",e=>tip(e,`${s} · ${code}<br>${a.cor}/${a.att} · ${a.acc}%`)); cell.addEventListener("mouseleave",untip); }
+      box.append(cell); }); });
+  return box;
+}
+
+function errorMix(){
+  const rows=filtered(); const by={};
+  rows.forEach(r=>{ if(r[5]) by[r[5]]=(by[r[5]]||0)+1; });
+  const order=["Persistent wrong belief","Concept gap","Regressed","Careless slip","Shaky / partial","Solid"];
+  const col={"Persistent wrong belief":"var(--crit)","Concept gap":"var(--crit)","Regressed":"var(--serious)","Careless slip":"var(--warn)","Shaky / partial":"var(--warn)","Solid":"var(--good)"};
+  const arr=order.filter(k=>by[k]).map(k=>({k,n:by[k]})); const max=Math.max(1,...arr.map(a=>a.n));
+  const box=el("div"); if(!arr.length){ box.append(el("div","cap","No data.")); return box; }
+  arr.forEach(d=>{ const row=el("div","bar-row"); row.style.gridTemplateColumns="150px 1fr 40px";
+    const track=el("div","bar-track"); const fill=el("div","bar-fill"); fill.style.width=(100*d.n/max)+"%"; fill.style.background=col[d.k]||"var(--series1)"; track.append(fill);
+    row.append(el("div",null,d.k), track, el("div","bar-val",d.n)); box.append(row); });
+  return box;
+}
+
+function repeatsTiles(){
+  const r=DATA.repeats; const box=el("div","kpis");
+  const defs=[["Learned",r.learned,"var(--good)","wrong → right"],["Retained",r.retained,"var(--series1)","right → right"],
+    ["Regressed",r.regressed,"var(--serious)","right → wrong"],["Still stuck",r.stuck,"var(--crit)","wrong → wrong"]];
+  defs.forEach(([l,n,c,note])=>{ const k=el("div","kpi"); k.append(el("div","lab",l)); const v=el("div","val",n); v.style.color=c; k.append(v, el("div","note",note)); box.append(k); });
+  return box;
+}
+
+function weakTable(){
+  const box=el("div"); const t=el("table");
+  t.innerHTML="<thead><tr><th>Subject</th><th>Topic</th><th class='num'>Acc</th><th>Action</th></tr></thead>";
+  const tb=el("tbody");
+  DATA.weak.slice(0,12).forEach(w=>{ const tr=el("tr");
+    const a=w.accuracy; const pill=el("span","pill"); pill.textContent=(a==null?"—":a+"%"); pill.style.background=accColor(a); pill.style.color=a==null?"var(--muted)":tierText(a);
+    const act=String(w.rec).split(" ")[0];
+    const td3=el("td","num"); td3.append(pill);
+    tr.append(el("td",null,w.subject), el("td",null,w.topic), td3, el("td",null,act));
+    tb.append(tr); });
+  t.append(tb); box.append(t); return box;
+}
+
+/* ---- views ---- */
+function candidateView(){
+  const root=el("div"); const a=agg(filtered()); const proj=Math.round(a.acc*3);
+  const k=el("div","kpis");
+  k.append(kpi("Projected", proj+" / 300", (proj>=PASS?("✓ "+(proj-PASS)+" past pass"):((PASS-proj)+" to pass"))),
+           kpi("Accuracy", a.acc+"%", a.cor+" / "+a.att+" correct"),
+           kpi("To safe (195)", Math.max(0,SAFE-proj)+"", proj>=SAFE?"reached ✓":"more correct"),
+           kpi("Days to exam", DATA.meta.days+"", DATA.meta.exam_target));
+  root.append(k);
+  root.append(el("div","band", DATA.meta.cand_line));
+  const strong=[], focus=[]; const by={}; filtered("subject").forEach(r=>{(by[r[1]]=by[r[1]]||[]).push(r);});
+  Object.entries(by).forEach(([s,rs])=>{ const ac=agg(rs).acc; if(ac>=70)strong.push(s); else if(ac<50)focus.push(s); });
+  const p1=el("div","panel"); p1.append(el("h2",null,"Your accuracy by cycle"), trendSVG()); root.append(p1);
+  const g=el("div","grid2");
+  const ps=el("div","panel"); ps.append(el("h2",null,"Strong areas")); const cs=el("div","chips"); (strong.length?strong:["—"]).forEach(s=>cs.append(el("span","chip g",s))); ps.append(cs);
+  const pf=el("div","panel"); pf.append(el("h2",null,"Focus areas")); const cf=el("div","chips"); (focus.length?focus:["—"]).forEach(s=>cf.append(el("span","chip r",s))); pf.append(cf);
+  g.append(ps,pf); root.append(g);
+  const pd=el("div","panel"); pd.append(el("h2",null,"Do next")); const ol=el("ol","donext");
+  DATA.weak.slice(0,5).forEach(w=>ol.append(el("li",null,`<b>${w.subject}</b> — ${w.topic}`))); pd.append(ol); root.append(pd);
+  return root;
+}
+
+function coachView(){
+  const root=el("div"); const a=agg(filtered()); const proj=Math.round(a.acc*3);
+  const k=el("div","kpis");
+  k.append(kpi("Accuracy", a.acc+"%", a.cor+" / "+a.att),
+           kpi("Projected", proj+" / 300"),
+           kpi("Δ to Pass (150)", (PASS-proj)+""),
+           kpi("Δ to Safe (195)", (SAFE-proj)+""),
+           kpi("Coverage", DATA.meta.coverage+"%"),
+           kpi("Mastered", DATA.meta.mastered+"%"),
+           kpi("Days to exam", DATA.meta.days+""),
+           kpi("Stage", DATA.meta.stage_name));
+  root.append(k);
+  const p1=el("div","panel"); p1.append(el("h2",null,"Accuracy by cycle"), el("div","cap","Dashed lines = pass (150 = 50%) and safe clearance (195 = 65%)."), trendSVG()); root.append(p1);
+  const g=el("div","grid2");
+  const pb=el("div","panel"); pb.append(el("h2",null,"By subject"), el("div","cap","Respects every filter except Subject · sorted weakest first"), subjectBars());
+  const ph=el("div","panel"); ph.append(el("h2",null,"Subject × Difficulty"), el("div","cap","Accuracy % · red<50 · amber 50–69 · green ≥70"), heatmap());
+  g.append(pb,ph); root.append(g);
+  const g2=el("div","grid2");
+  const pe=el("div","panel"); pe.append(el("h2",null,"Error-type mix (behavioural)"), errorMix());
+  const pr=el("div","panel"); pr.append(el("h2",null,"Repeated questions"), repeatsTiles());
+  g2.append(pe,pr); root.append(g2);
+  const pw=el("div","panel"); pw.append(el("h2",null,"Weak topics — priority actions"), weakTable()); root.append(pw);
+  return root;
+}
+
+function render(){
+  const r=$("#root"); r.innerHTML="";
+  r.append(state.view==="candidate"?candidateView():coachView());
+}
+
+/* ---- init ---- */
+function init(){
+  const cy=cycles();
+  const fc=$("#f-cycle"); fc.innerHTML="<option>All</option>"+cy.map(c=>`<option>${c}</option>`).join("");
+  state.cycle = cy.length? String(cy[cy.length-1]) : "All"; fc.value=state.cycle;
+  const fs=$("#f-subject"); fs.innerHTML="<option>All</option>"+subjects().map(s=>`<option>${s}</option>`).join("");
+  fc.onchange=e=>{state.cycle=e.target.value;render()};
+  fs.onchange=e=>{state.subject=e.target.value;render()};
+  $("#f-difficulty").onchange=e=>{state.difficulty=e.target.value;render()};
+  $("#f-part").onchange=e=>{state.part=e.target.value;render()};
+  document.querySelectorAll("#viewseg button").forEach(b=>b.onclick=()=>{
+    state.view=b.dataset.v; document.querySelectorAll("#viewseg button").forEach(x=>x.classList.toggle("on",x===b));
+    $("#filters").classList.toggle("hide", false); render();
+  });
+  $("#themebtn").onclick=()=>{ const h=document.documentElement; h.dataset.theme = h.dataset.theme==="dark"?"light":"dark"; };
+  if(matchMedia && matchMedia("(prefers-color-scheme: dark)").matches) document.documentElement.dataset.theme="dark";
+  $("#asof").textContent="Anonymised · generated "+DATA.meta.generated_at+" · exam target "+DATA.meta.exam_target;
+  $("#foot").textContent="fmge-study · scores/topics only, no personal data · updates each time the dashboard is rebuilt";
+  render();
+}
+init();
+</script>
+</body>
+</html>
